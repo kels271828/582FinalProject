@@ -5,9 +5,19 @@
 \usepackage{amssymb}
 \usepackage{mathtools}
 \usepackage{enumerate}
+\usepackage{physics}
 \usepackage{graphicx}
 \usepackage{float}
 \setlength\parindent{0pt}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\T}{\mathbb{T}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\D}{\mathbb{D}}
+\newcommand{\e}{\mathrm{e}}
+\newcommand{\C}{\mathbb{C}}
 
 \title{Principal Component Analysis for Semantic Classification \\ AMATH 582 Final Project}
 \author{Benjamin Liu, Kelsey Maass, and Riley Molloy}
@@ -22,12 +32,29 @@
 
 % Sec 1. Introduction and Overview
 \section{Introduction and Overview}
-
+PCA and Robust PCA
 % Sec 2. Theoretical Background
 \section{Theoretical Background}
+\subsection{PCA}
+\begin{equation} \label{svd}
+A = U S V^*
+\end{equation}
 
+\subsection{Robust PCA}
+\begin{equation} \label{robust_obj}
+\min_{L,S} \norm{A-L-S}_{F}^2 + \lambda_1 \norm{L}_* + \lambda_2 \norm{S}_1,
+\end{equation}
+where $\norm{\cdot}_* = \norm{\sigma(\cdot)}_1$, in which $\sigma$ maps a matrix to a vector of its singular values. In addition, $\norm{\cdot}_1$ is the vectorized $\ell_1$ norm, treating $S \in \R^{m \times n}$ as a vector in $S \in \R^{mn}.$
+
+\subsection{Classification Methods}
 % Sec 3. Algorithm Implementation and Development
 \section{Algorithm Implementation and Development}
+
+\subsection{PCA}
+
+\subsection{Robust PCA}
+
+\subsection{Classification}
 
 % Sec 4. Computational Results
 \section{Computational Results}
