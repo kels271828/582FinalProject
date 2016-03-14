@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[12pt]{article}
 \usepackage[margin=.6in]{geometry}
 \usepackage{amsmath,amsfonts,amssymb,mathtools}
 \usepackage{enumerate}
@@ -35,7 +35,13 @@
 
 % Sec 1. Introduction and Overview
 \section{Introduction and Overview}
-PCA and Robust PCA
+Dimensionality reduction is a property which all data scientists look for in their work. It allows for ease and speed in computation and promotes less complexity in many dense problem spaces. Principle component analysis is a standby in dimensionality reduction techniques, grounded in the power and breadth of the singular value decomposition. 
+
+Our work employs the use of PCA to lower the dimensionality of a large set of word-frequency data in five different classes of articles published by the British Broadcasting Corporation (BBC): Business, Sports, Entertainment Politics, and Technology. Each article, considered a single observation, is treated as a vector in the space of words used in every article. Each component of a vector represents the frequency of a given word throughout the article. We look to reduce this large space of words and represent each article with a small number of components, then classify each article as one of the five article types---i.e., we look to learn the semantics of each article in its low-dimensional feature space. This type of analysis is often referred to as ``Latent Semantic Indexing.''
+
+In order to test the validity of our dimensionality reduction, we employ four different supervised learning techniques for classification: Nearest mean, $K$-nearest neighbors, Logistic regression, and a Neural network. We examine the accuracy of the classification for each method and how it varies with the number of principle components used to represent the feature space. 
+
+In addition to PCA, we also employ a variant known as Robust PCA, and classify using its results as well. Robust PCA first separates the original data matrix into two matrices: a sparse matrix and a lower rank matrix. In our application, the sparse matrix should indicate words which are not found in many articles, but are prominent in a few. Thus, the low rank matrix contains fewer outliers  and consists of data on which the traditional PCA procedure should yield better results. 
 
 
 % Sec 2. Theoretical Background
@@ -86,7 +92,7 @@ where $\sigma$ maps a matrix to a vector of its singular values. Therefore the n
 \subsection{PCA and Robust PCA}
 \begin{figure}[H]
 \centering
-\includegraphics[width=.6\textwidth]{singularvaluescompare}
+\includegraphics[width=.6\textwidth]{figures/singularvaluescompare}
 \end{figure}
 
 \subsection{Classification}
