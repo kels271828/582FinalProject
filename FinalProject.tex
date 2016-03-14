@@ -70,21 +70,42 @@ where $\sigma$ maps a matrix to a vector of its singular values. Therefore the n
 
 \subsection{Article Data}
 
-\comment{Algorithm for turning articles into wordcount / wordfrequency data. Stemming, low wordcount removal, stopwords.}
+Our dataset consists of 2225 BBC articles labeled by topic, including business (510), entertainment (386), politics (417), sports (511), and technology (401). The data, collected for a paper presented at the 2006 International Conference on Machine Learning [1], consists of integer word counts for 9635 distinct words subject to the following pre-processing steps:
+\begin{enumerate}
+\item Stemming to identify like-words (e.g. fish, fisher, fishing, fishes)
+\item Removal of stop words (common words such as: a, about, am, any, are, etc.)
+\item Low-count (less than 3) removal
+\end{enumerate}
 
 \subsection{Robust PCA}
 
 \subsection{Classification Schemes}
 
+To classify articles in our cross validation set, we first project both datasets onto a subset of the training data’s principal components. Next we compare our classification accuracy as we increase the number of principal components used for the following classification methods:
+
 \subsubsection{Nearest Mean}
+
+For the nearest mean method, we first project the training data onto
+the first four principal components and calculate the average projection for each class. To classify new articles, we assign the label of the closest mean projection.
 
 \subsubsection{K-Nearest Neighbors (KNN)}
 
+The K-nearest neighbors algorithm classifies new articles by
+finding their K nearest neighbors and assigning the label shared by the most neighbors. For our article classification, we let $K = 5$.
+
 \subsubsection{Logistic Regression}
+
+Logistic regression classifies articles by first drawing linear decision
+boundaries between the classes (one-vs-all) that maximize the log-likelihood of the probabilities that the training articles belong to their respective classes. The final label is chosen from the class with the highest probability.
 
 \subsubsection{Neural Network}
 
+To classify with neural networks, we first build a network with three
+layers: input, hidden, output. We then train the network to minimize a cost function on the training data and assign classes to new articles by choosing the class with the highest output value.
+
 \subsubsection{Support Vector Machine}
+
+\comment{ben's results}
 
 % Sec 4. Computational Results
 \section{Computational Results}
@@ -99,6 +120,13 @@ where $\sigma$ maps a matrix to a vector of its singular values. Therefore the n
 
 % Sec 5. Summary and Conclusions
 \section{Summary and Conclusions}
+
+\begin{thebibliography}{4}
+\bibitem{clustering} D. Greene and P. Cunningham, \emph{Practical Solutions to the Problem of Diagonal Dominance in Kernel Document Clustering}, Proc. ICML, 2006.
+\bibitem{rpca} Y. Ma, E. J. Candes, X. Li, and J. Wright. \emph{Robust Principal Component Analysis?} Technical report, Stanford University , Stanford CA, 2009.
+\bibitem{nathan} J. N. Kutz. \emph{Data-Driven Modeling \& Scientific Computation: Methods for Complex Systems and Big Data.} Oxford University Press, 1 st edition, 20013.
+\bibitem{prox} N. Boyd, S. Boyd, \emph{Proximal Algorithms.} Foundations and Trends in Optimization, Vol. 1, No.3, 2013.
+\end{thebibliography}
 
 \newpage
 % App A. MATLAB functions used and brief implementation explanation
