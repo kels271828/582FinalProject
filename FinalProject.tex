@@ -49,12 +49,14 @@ In addition to PCA, we also employ a variant known as Robust PCA, and classify u
 \section{Theoretical Background}
 
 \subsection{Principal Component Analysis}
+\comment{Riley}
 \begin{align}
 A &= U S V^*
 \label{eq:svd}
 \end{align}
 
 \subsection{Robust PCA}
+\comment{Riley}
 \begin{align}
 \min_{L,S} \norm{A-L-S}_{F}^2 + \lambda_1 \norm{L}_* + \lambda_2 \norm{S}_1,
 \label{eq:robust_obj}
@@ -66,6 +68,7 @@ where $\norm{\cdot}_*$ is the nuclear norm, defined by
 where $\sigma$ maps a matrix to a vector of its singular values. Therefore the nuclear norm of a matrix is the sum of its singular values. In addition, $\norm{\cdot}_1$ is the vectorized $\ell_1$ norm, treating $S \in \R^{m \times n}$ as a vector in $S \in \R^{mn}.$
 
 \subsection{Classification Methods}
+\comment{Kelsey}
 % Sec 3. Algorithm Implementation and Development
 \section{Algorithm Implementation and Development}
 
@@ -79,8 +82,10 @@ Our dataset consists of 2225 BBC articles labeled by topic, including business (
 \end{enumerate}
 
 \subsection{Robust PCA}
+\comment{Riley}
 
 \subsection{Classification Schemes}
+\comment{Kelsey addition}
 
 To classify articles in our cross validation set, we first project both datasets onto a subset of the training data’s principal components. Next we compare our classification accuracy as we increase the number of principal components used for the following classification methods:
 
@@ -110,6 +115,7 @@ layers: input, hidden, output. We then train the network to minimize a cost func
 
 % Sec 4. Computational Results
 \section{Computational Results}
+\comment{Poster materials}
 
 \subsection{PCA and Robust PCA}
 \begin{figure}[H]
@@ -121,6 +127,7 @@ layers: input, hidden, output. We then train the network to minimize a cost func
 
 % Sec 5. Summary and Conclusions
 \section{Summary and Conclusions}
+\comment{Ben}
 
 \begin{thebibliography}{4}
 \bibitem{clustering} D. Greene and P. Cunningham, \emph{Practical Solutions to the Problem of Diagonal Dominance in Kernel Document Clustering}, Proc. ICML, 2006.
