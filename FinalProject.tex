@@ -49,11 +49,21 @@ In addition to PCA, we also employ a variant known as Robust PCA, and classify u
 \section{Theoretical Background}
 
 \subsection{Principal Component Analysis}
-\comment{Riley}
-\begin{align}
-A &= U S V^*
+
+Principal component analysis is a powerful tool for isolating low-dimensional
+structure embedded in high-dimensional data. The goal of PCA is to find the best
+linear transformation of the data which maximizes the variance in the first principal component direction and in each subsequent orthogonal directions. To perform PCA, we recall the Singular Value Decomposition, or SVD, 
+
+\begin{align} 
+A &= U \Sigma V^*,
 \label{eq:svd}
 \end{align}
+
+which exists for every matrix $A \in \R^{m \times n}.$ We refer to the number of nonzero singular values of a matrix as the \emph{rank} of a given matrix. We refrain from listing otherwise significant knowledge about the SVD in hopes that the reader holds some level of awareness of the mathematics. 
+
+We arrange our matrix of data $A \in \R^{ 9635 \times 2225 } $ such that each row represents a different word (or \emph{feature}) and each column represents a different article. We arrange the columns by the classes of articles. In addition, we require this matrix to have rows of mean zero. Since this will not be true of the data initially, we redefine $X$ by subtracting off the mean of each row of $X$, and letting this be the ``new'' data matrix. We then take the SVD of this matrix as in \eqref{eq:svd}.
+
+The matrix $U$ now consists of columns which represent the ordered principle components, $\Sigma$ represents the importance of each singular value with respect to the others, and $V$ represents how each article is projected onto the principle component space. To represent each article $i$ in terms of the determined principle components, we can view each article as $\sigma_i v_i $, where $\sigma_i$ the corresponding singular value from $\Sigma$, and $v_i$ is the $i$-th \emph{row} of $V$. Since we look to reduce the dimensionality of the data, we intend to only examine a small number of principle components; therefore, we look at only the first several components of $v_i$.
 
 \subsection{Robust PCA}
 \comment{Riley}
