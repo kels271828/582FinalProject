@@ -66,7 +66,7 @@ The matrix $U$ now consists of columns which represent the ordered principle com
 \subsection{Robust PCA}
 Robust Principle Component Analysis is a variant of PCA which presupposes the data has some low dimensionality suitable for PCA, but with an unknown amount of sparse noise within the data. That is, for the data matrix $A$, we assume that 
 $$  A \approx L + S,$$
-where $L$ has low rank and $S$ is sparse. To penalize these properties convexly, we consider the formulation
+where $L$ has low rank and $S$ is sparse. To penalize these assumptions convexly, we consider the formulation
 \begin{align}
 \min_{L,S} \norm{A-L-S}_{F}^2 + \lambda_1 \norm{L}_* + \lambda_2 \norm{S}_1,
 \label{eq:robust_obj}
@@ -147,12 +147,91 @@ In our work with the BBC article data, we found that the built-in optimization r
 \comment{Poster materials}
 
 \subsection{PCA and Robust PCA}
+
+While data methods are powerful tools for discovering trends and structure of large in large datasets, inferring semantic meaning from these models can be difficult. For example, principal component analysis determines the best basis to represent our
+article data in terms of word frequency values and variance, with no regard to semantic meaning. Nevertheless, our article classification analysis uncovers some trends with meaningful interpretation in terms of the thematic content of the articles.
+
+Below, we list the 25 words with the highest weights in each of the first four principal components. Since each principal component is a linear combination of words, it is difficult to interpret their meaning. However, we note that the fourth principal
+component has many technology-related words, which could explain why the inclusion of the fourth principal component is necessary to correctly classify technology articles.
+
+\begin{itemize}
+\item {\bf PC 1:} game, play, win, player, firm, England, company, market, govern, year, against, team, growth, share, side, best, sale, price, club, bank, economy, go, cup, people, coach
+\item {\bf PC 2:} film, award, year, best, music, party, labour, star, elect, govern, Blair, include, sale, ministry, Tori, top, show, actor, nomination, told, number, album, 2004, people, band
+\item {\bf PC 3:}  film, game, party, sale, labour, year, best, award, elect, market, firm, Blair, people, company, growth, price, share, Tori, profit, bank, music, ministry, England, star, player
+\item {\bf PC 4:} people, game, phone, user, mobile, year, tech, music, service, software, Microsoft, computer, firm, best, site, program, govern, search, labour, economy, elect, digital,
+net, online, Blair
+\end{itemize}
+
+In Figure \ref{sing_val}, we compare the energy percentages of each of the first ten singular values for both PCA and robust PCA, where we note that in the robust PCA results the first four principal components increase in significance.
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=.6\textwidth]{figures/singularvaluescompare}
+\caption{Principal component analysis of the article data. {\bf Left.} Comparison of first 100 normalized singular values derived from the data with and without robust PCA.
+{\bf Right.} Contribution of principal components to word frequencies for articles in each class.}
+\label{sing_val}
 \end{figure}
 
+\subsubsection{Sparse Matrix Analysis}
+Robust PCA yields a sparse matrix containing elements which represent words important to a small number of articles. Our sparse matrix contained 252 non-zero elements, compared with 227,814, the total number of non-zero elements in the training dataset. We notice that these words correspond to subtopics within given category (e.g.: last names of athletes, music terminology, “Yahoo”). Some of the most frequent of these words are listed below.
+
+\begin{center}
+\begin{tabular}{c c c c c}
+{\bf Business} & {\bf Sports} & {\bf Entertainment} & {\bf Politics} & {\bf Tech} \\ \hline
+call & roddick & song & wage & game \\
+centre & nadal & music & minimum & ink \\
+ & dallaglio & urban & forsythe & yahoo \\
+ & & best & increase & gadget \\
+\end{tabular}
+\end{center}
+
+
 \subsection{Classification}
+In the four classification methods we tested, we found that the classification accuracy did not significantly increase when we added more than four principal components.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.6\textwidth]{figures/accuracybyrank}
+\caption{Comparison of classification accuracy for each article class as we vary the number of principal components (rank) used.}
+\label{class_accuracy}
+\end{figure}
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{c | c | c | c | c | c}
+ {\bf Rank } & {\bf 1 } & {\bf 2} & {\bf 3} & {\bf 4} & {\bf 5 } \\ \hline
+Nearest Mean & 59\% & 77\% & 82\% & 96\%  & 96\% \\
+KNN ($K = 5$) & 56\% & 77\% & 86\% & 96\%  & 97\% \\
+Logistic & 45\% & 75\% & 78\% & 94\%  & 94\% \\
+Neural Net & 46\% & 75\% & 79\% & 95\%  & 95\%
+\end{tabular}
+\end{center} 
+
+\begin{center}
+\begin{tabular}{c | c | c | c | c | c}
+ {\bf Rank } & {\bf 1 } & {\bf 2} & {\bf 3} & {\bf 4} & {\bf 5 } \\ \hline
+Nearest Mean & 48\% & 78\% & 89\% & 95\%  & 96\% \\
+KNN ($K = 5$) & 52\% & 77\% & 92\% & 96\%  & 96\% \\
+Logistic & 45\% & 74\% & 77\% & 93\%  & 93\% \\
+Neural Net & 45\% & 74\% & 79\% & 93\%  & 93\%
+\end{tabular}
+\end{center}
+\caption{Comparison of classification accuracy for four classification algorithms on our PCA space (top) and robust PCA spaces (bottom).}
+\end{table}
+
+\subsubsection{Misclassification}
+While projecting onto the principal components of the training set does a good job at separating the article by class, it does
+not separate them perfectly. Therefore articles near the decision boundaries may be misclassified.
+
+For example, Figure \ref{misclassification} shows how articles from each class are classified by the $K$-nearest neighbor algorithm as we vary the number of principal components used. It is interesting to note that articles from business and politics are likely to be mistakenly cross-classified. Furthermore, technology articles are prone to misclassification if the fourth principal component, which contains many technology-related words, is ignored.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=.3]{figures/classificationmatrices}
+\caption{Classification of each article by type. Diagonal elements indicate percent of articles classified correctly; off-diagonal
+elements correspond to misclassified articles.}
+\label{misclassification}
+\end{figure}
 
 % Sec 5. Summary and Conclusions
 \section{Summary and Conclusions}
