@@ -47,8 +47,8 @@ In addition to the traditional PCA formulation, we also employ a variant known a
 % Sec 2. Theoretical Background
 \section{Theoretical Background}
 
-\subsection{Principal Component Analysis
-}
+% Principal Component Analysis
+\subsection{Principal Component Analysis}
 Principal component analysis is a powerful tool for isolating low-dimensional
 structure embedded in high-dimensional data. The goal of PCA is to find the best
 linear transformation of the data which maximizes the variance in the first principal component direction and in each subsequent orthogonal directions. To perform PCA, we utilize the singular value decomposition, or SVD, 
@@ -65,10 +65,7 @@ where $U \in \R^{m \times r}$, $\Sigma \in \R^{r \times r}$, and $V \in \R^{n \t
 U_r^* A = \Sigma_r V_r^*.
 \end{equation}
 
-%We arrange our matrix of data $A \in \R^{ 9635 \times 2225 } $ such that each row represents a different word (or \emph{feature}) and each column represents a different article. We arrange the columns by the classes of articles. In addition, we require this matrix to have rows of mean zero. Since this will not be true of the data initially, we redefine $X$ by subtracting off the mean of each row of $X$, and letting this be the ``new'' data matrix. We then take the SVD of this matrix as in \eqref{eq:svd}.
-%
-%The matrix $U$ now consists of columns which represent the ordered principle components, $\Sigma$ represents the importance of each singular value with respect to the others, and $V$ represents how each article is projected onto the principle component space. To represent each article $i$ in terms of the determined principle components, we can view each article as $\sigma_i v_i $, where $\sigma_i$ the corresponding singular value from $\Sigma$, and $v_i$ is the $i$-th \emph{row} of $V$. Since we look to reduce the dimensionality of the data, we intend to only examine a small number of principle components; therefore, we look at only the first several components of $v_i$.
-
+% Robust PCA
 \subsection{Robust PCA}
 Robust principle component analysis is a variant of PCA which presupposes that the data has low-rank structure, but with an unknown amount of sparse noise. That is, for the data matrix $A$ we assume that 
 \begin{equation}  A \approx L + S, \end{equation}
@@ -79,48 +76,152 @@ where $L$ has low rank and $S$ is sparse. Finding these two matrices can be form
 \end{align}
 where $\norm{\cdot}_*$ is the nuclear norm, defined by $\norm{\cdot}_* = \norm{\sigma(\cdot)}_1$, where $\sigma$ maps a matrix to a vector of its singular values. In other words, the nuclear norm of a matrix is the sum of its singular values. In addition, $\norm{\cdot}_1$ is the vectorized $\ell_1$ norm, treating the matrix $S \in \R^{m \times n}$ as the vector$S \in \R^{mn}.$ The parameters $\lambda_1$ and $\lambda_2$ can be tuned to prioritize low rank in $L$ or sparsity in $S.$ We can now choose one of many available methods for convex optimization problems, which we discuss in the next section. 
 
-\subsection{Classification Methods}
-\comment{Kelsey}
 % Sec 3. Algorithm Implementation and Development
 \section{Algorithm Implementation and Development}
 
-\subsection{Article Data}
+% Pre-processing and PCA
+\subsection{Pre-processing and PCA}
 
 Our dataset consists of 2225 BBC articles labeled by topic, including business (510), entertainment (386), politics (417), sports (511), and technology (401). The data, collected for a paper presented at the 2006 International Conference on Machine Learning [1], consists of integer word counts for 9635 distinct words subject to the following pre-processing steps:
+\newpage
 \begin{enumerate}
 \item Stemming to identify like-words (e.g. fish, fisher, fishing, fishes)
 \item Removal of stop words (common words such as: a, about, am, any, are, etc.)
 \item Low-count (less than 3) removal
 \end{enumerate}
 
+\noindent We arrange our data into a matrix $A \in \R^{9635 \times 2225}$ such that each row represents a different word (or \emph{feature}), and each column represents a different article. To ensure that longer articles do not disproportionately influence our analysis, we divide each column by its sum to convert word counts to word frequencies. Next, we subtract the mean of each row, which ensures that the first principal component has meaningful content rather than just information about the mean article. Finally, we compute the singular value decomposition of the matrix. Due to the size of our dataset, we only compute the first 10 principal components, using the MATLAB function {\tt svds}. 
+
+% Robust PCA
 \subsection{Robust PCA}
-As mentioned previously, many methods of optimizing \eqref{eq:robust_obj} exist. We chosen to implement a method described in \cite{prox} known as \emph{Alternating direction method of multipliers} (ADMM), or \emph{Douglas Rachford splitting}. The algorithm consists of finding closed form representations of the proximal operators of the nuclear norm and the vectorized 1-norm, and evaluating them iteratively and independently, comparing their results.  
+As mentioned previously, many methods of optimizing \eqref{eq:robust_obj} exist. We have chosen to implement a method described in \cite{prox} known as the \emph{alternating direction method of multipliers} (ADMM), or \emph{Douglas Rachford splitting}. The algorithm consists of finding closed form representations of the proximal operators of the nuclear norm and the vectorized 1-norm, and evaluating them iteratively and independently, comparing their results.  We utilize an open-source implementation of the algorithm available {\color{blue} \href{http://stanford.edu/~boyd/admm.html}{here}}. Once the low-rank matrix $L$ is obtained, we convert word count to word frequencies, shift the data to zero mean, and then compute the svd. 
 
+% Classification Schemes
 \subsection{Classification Schemes}
-\comment{Kelsey addition}
 
-To classify articles in our cross validation set, we first project both datasets onto a subset of the training data’s principal components. Next we compare our classification accuracy as we increase the number of principal components used for the following classification methods:
+To classify articles in our cross validation set, we first project both datasets onto a subset of the training data's principal components. Next we compare our classification accuracy as we increase the number of principal components used for the following classification methods:
 
-\subsubsection{Nearest Mean}
+\begin{itemize}
+\item \textbf{Nearest Mean:} For the nearest mean method, we first project the training data onto
+the first $r$ principal components and calculate the average projection for each class. To classify new articles, we assign the label of the closest mean projection.
 
-For the nearest mean method, we first project the training data onto
-the first four principal components and calculate the average projection for each class. To classify new articles, we assign the label of the closest mean projection.
+\item \textbf{$k$-Nearest Neighbors (KNN):} The $k$-nearest neighbors algorithm classifies new articles by
+finding their $k$ nearest neighbors and assigning the label shared by the most neighbors. For our article classification, we let $k = 5$.
 
-\subsubsection{K-Nearest Neighbors (KNN)}
-
-The K-nearest neighbors algorithm classifies new articles by
-finding their K nearest neighbors and assigning the label shared by the most neighbors. For our article classification, we let $K = 5$.
-
-\subsubsection{Logistic Regression}
-
-Logistic regression classifies articles by first drawing linear decision
+\item \textbf{Logistic Regression:} Logistic regression classifies articles by first drawing linear decision
 boundaries between the classes (one-vs-all) that maximize the log-likelihood of the probabilities that the training articles belong to their respective classes. The final label is chosen from the class with the highest probability.
 
-\subsubsection{Neural Network}
-
-To classify with neural networks, we first build a network with three
+\item \textbf{Neural Network:} To classify with neural networks, we first build a network with three
 layers: input, hidden, output. We then train the network to minimize a cost function on the training data and assign classes to new articles by choosing the class with the highest output value.
 
+\item \textbf{Support Vector Machines:} The motivation behind the support vector machine algorithm is to find a linear decision boundary that maximizes the margin between classes. Data instances that lie along this margin are known as the support vectors. This algorithm works best when data is linearly separable, i.e. no data points cross the decision boundary, but the formulation can be relaxed when this is not the case, penalizing points lying on the wrong side more heavily. Of all our classification methods, we had the most difficulty implementing a support vector machine classifier, which we discuss in detail in the next section.
+\end{itemize}
+
+% Sec 4. Computational Results
+\section{Computational Results}
+
+% Classification
+\subsection{Classification}
+In the four classification methods we successfully implemented, we found that the classification accuracy did not significantly increase when we added more than four principal components. We also note that for all of our methods we are able to successfully classify a high percentage of the articles, up to $96\%$ using only four principal components. Surprisingly, the robust formulation does not improve classification accuracy, and in fact sometimes performs slightly worse. Unfortunately we were not able to tune the robust PCA parameters to see if we could improve results, due to the expense of the factorization algorithm. 
+
+\begin{table}[H]
+\begin{minipage}{0.5\textwidth}
+\begin{center}\textbf{PCA}\end{center}
+\begin{tabular}{c | c | c | c | c | c}
+ {\bf Rank } & {\bf 1 } & {\bf 2} & {\bf 3} & {\bf 4} & {\bf 5 } \\ \hline
+Nearest Mean & 59\% & 77\% & 82\% & 96\%  & 96\% \\
+KNN ($K = 5$) & 56\% & 77\% & 86\% & 96\%  & 97\% \\
+Logistic & 45\% & 75\% & 78\% & 94\%  & 94\% \\
+Neural Net & 46\% & 75\% & 79\% & 95\%  & 95\%
+\end{tabular}
+\end{minipage}
+\begin{minipage}{0.5\textwidth}
+\begin{center}\textbf{Robust PCA}\end{center}
+\begin{tabular}{c | c | c | c | c | c}
+ {\bf Rank } & {\bf 1 } & {\bf 2} & {\bf 3} & {\bf 4} & {\bf 5 } \\ \hline
+Nearest Mean & 48\% & 78\% & 89\% & 95\%  & 96\% \\
+KNN ($K = 5$) & 52\% & 77\% & 92\% & 96\%  & 96\% \\
+Logistic & 45\% & 74\% & 77\% & 93\%  & 93\% \\
+Neural Net & 45\% & 74\% & 79\% & 93\%  & 93\%
+\end{tabular}
+\end{minipage}
+\caption{Comparison of classification accuracy for as we vary rank for our four classification algorithms on the traditional PCA space (left) and robust PCA space (right).}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.6\textwidth]{figures/accuracybyrank}
+\caption{Comparison of classification accuracy for $k$-nearest neighbors ($k = 5$) for each article class as we vary the number of principal components (rank) used.}
+\label{class_accuracy}
+\end{figure}
+
+To understand why increasing the number of principal components does not significantly improve classification accuracy, we look at how each article class is expressed in the principal component basis. In Figure 2 we plot the column vectors of $V$, which express how each article is projected onto the principal component basis. We note that the articles are differentiated by class in the first four principal components, but not in the fifth. This is also true for principal components 6-10. This illustrates the fact that while using a higher-rank matrix might better approximate the data, only the first four significantly contribute to the task of classification. Furthermore, Figure 1 seems to suggest that only the first three principal components are necessary to classify the first four categories, while the fourth principal component is needed for correctly classifying the tech articles. In fact, if we look at the expression of the tech articles in Figure 2, at least for the traditional PCA results, we see that the tech articles are only differentiated by the fourth principal component. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=3in]{figures/principalcomponents_original} \quad
+\includegraphics[width=3in]{figures/principalcomponents_robust}
+\caption{Visualization of the columns of $V$, which illustrate how each article is projected onto each of the first five principal components. We note that while the articles are differentiated by class in the first four principal components, they are not with the fifth. }
+\end{figure}
+
+We can also look at the singular values of the data matrix to determine how important each principal component is to representing the system. In Figure \ref{sing_val} below, we compare the energy percentages of each of the first 100 singular values for both the traditional PCA and robust PCA formulations, where we note that the first four principal components increase in significance for robust PCA. It is therefore surprising that robust PCA performed worse in our classification schemes! 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.6\textwidth]{figures/singularvaluescompare}
+\caption{Comparison of first 100 singular values derived from the data with traditional and robust PCA formulations. The singular values are normalized by the Frobenius norm of each data matrix. }
+\label{sing_val}
+\end{figure}
+
+
+% Misclassification
+\subsubsection{Misclassification}
+While projecting onto the principal components of the training set does a good job at separating the article by class, it does
+not separate them perfectly. Therefore articles near the decision boundaries may be misclassified.
+
+For example, Figure \ref{misclassification} shows how articles from each class are classified by the $K$-nearest neighbor algorithm as we vary the number of principal components used. It is interesting to note that articles from business and politics are likely to be mistakenly cross-classified. Furthermore, technology articles are prone to misclassification if the fourth principal component, which contains many technology-related words, is ignored.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=.3]{figures/classificationmatrices}
+\caption{Classification of each article by type. Diagonal elements indicate percent of articles classified correctly; off-diagonal
+elements correspond to misclassified articles.}
+\label{misclassification}
+\end{figure}
+
+% PCA and Robust PCA
+\subsection{Semantic Analysis}
+
+While data methods are powerful tools for discovering trends and structure of large in large datasets, inferring semantic meaning from these models can be difficult. For example, principal component analysis determines the best basis to represent our
+article data in terms of word frequency values and variance, with no regard to semantic meaning. Nevertheless, our article classification analysis uncovers some trends with meaningful interpretation in terms of the thematic content of the articles.
+
+Below, we list the 25 words with the highest weights in each of the first four principal components. Since each principal component is a linear combination of words, it is difficult to interpret their meaning. However, we note that the fourth principal
+component has many technology-related words, which could explain why the inclusion of the fourth principal component is necessary to correctly classify technology articles.
+
+\begin{itemize}
+\item {\bf PC 1:} game, play, win, player, firm, England, company, market, govern, year, against, team, growth, share, side, best, sale, price, club, bank, economy, go, cup, people, coach
+\item {\bf PC 2:} film, award, year, best, music, party, labour, star, elect, govern, Blair, include, sale, ministry, Tori, top, show, actor, nomination, told, number, album, 2004, people, band
+\item {\bf PC 3:}  film, game, party, sale, labour, year, best, award, elect, market, firm, Blair, people, company, growth, price, share, Tori, profit, bank, music, ministry, England, star, player
+\item {\bf PC 4:} people, game, phone, user, mobile, year, tech, music, service, software, Microsoft, computer, firm, best, site, program, govern, search, labour, economy, elect, digital,
+net, online, Blair
+\end{itemize}
+
+\subsubsection{Sparse Matrix Analysis}
+Robust PCA yields a sparse matrix containing elements which represent words important to a small number of articles. Our sparse matrix contained 252 non-zero elements, compared with 227,814, the total number of non-zero elements in the training dataset. We notice that these words correspond to subtopics within given category (e.g.: last names of athletes, music terminology, “Yahoo”). Some of the most frequent of these words are listed below.
+
+\begin{center}
+\begin{tabular}{c c c c c}
+{\bf Business} & {\bf Sports} & {\bf Entertainment} & {\bf Politics} & {\bf Tech} \\ \hline
+call & roddick & song & wage & game \\
+centre & nadal & music & minimum & ink \\
+ & dallaglio & urban & forsythe & yahoo \\
+ & & best & increase & gadget \\
+\end{tabular}
+\end{center}
+
+
+
+% Support Vector Machines
 \subsubsection{Support Vector Machine}
 
 Support vector machines (SVMs) are, in their basis formulation, binary classifiers. This means that they can only classify data between two classes. Several approaches exist to extend the SVM framework to support classification between more than two classes, such as one-versus-all, where SVMs are built to classify each class against all others, and one-versus-one, where SVMs are built to classify each class against each other class.
@@ -142,97 +243,6 @@ To truly extend the one-versus-all SVM framework to classify multiple classes, w
 \end{figure}
 
 In our work with the BBC article data, we found that the built-in optimization routines used in building the SVMs failed to converge for the large data set. We found that even in our two-dimensional test cases, that by increasing the number of data points in the training set we could induce this problem. It therefore seems that isolating the support vector training data points may have been the most significant factor in algorithm convergence, and we speculate that performing some kind of pre-processing to remove easily-classified (interior) points in each class may improve the performance of the algorithm.
-
-% Sec 4. Computational Results
-\section{Computational Results}
-\comment{Poster materials}
-
-\subsection{PCA and Robust PCA}
-
-While data methods are powerful tools for discovering trends and structure of large in large datasets, inferring semantic meaning from these models can be difficult. For example, principal component analysis determines the best basis to represent our
-article data in terms of word frequency values and variance, with no regard to semantic meaning. Nevertheless, our article classification analysis uncovers some trends with meaningful interpretation in terms of the thematic content of the articles.
-
-Below, we list the 25 words with the highest weights in each of the first four principal components. Since each principal component is a linear combination of words, it is difficult to interpret their meaning. However, we note that the fourth principal
-component has many technology-related words, which could explain why the inclusion of the fourth principal component is necessary to correctly classify technology articles.
-
-\begin{itemize}
-\item {\bf PC 1:} game, play, win, player, firm, England, company, market, govern, year, against, team, growth, share, side, best, sale, price, club, bank, economy, go, cup, people, coach
-\item {\bf PC 2:} film, award, year, best, music, party, labour, star, elect, govern, Blair, include, sale, ministry, Tori, top, show, actor, nomination, told, number, album, 2004, people, band
-\item {\bf PC 3:}  film, game, party, sale, labour, year, best, award, elect, market, firm, Blair, people, company, growth, price, share, Tori, profit, bank, music, ministry, England, star, player
-\item {\bf PC 4:} people, game, phone, user, mobile, year, tech, music, service, software, Microsoft, computer, firm, best, site, program, govern, search, labour, economy, elect, digital,
-net, online, Blair
-\end{itemize}
-
-In Figure \ref{sing_val}, we compare the energy percentages of each of the first ten singular values for both PCA and robust PCA, where we note that in the robust PCA results the first four principal components increase in significance.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=.6\textwidth]{figures/singularvaluescompare}
-\caption{Principal component analysis of the article data. {\bf Left.} Comparison of first 100 normalized singular values derived from the data with and without robust PCA.
-{\bf Right.} Contribution of principal components to word frequencies for articles in each class.}
-\label{sing_val}
-\end{figure}
-
-\subsubsection{Sparse Matrix Analysis}
-Robust PCA yields a sparse matrix containing elements which represent words important to a small number of articles. Our sparse matrix contained 252 non-zero elements, compared with 227,814, the total number of non-zero elements in the training dataset. We notice that these words correspond to subtopics within given category (e.g.: last names of athletes, music terminology, “Yahoo”). Some of the most frequent of these words are listed below.
-
-\begin{center}
-\begin{tabular}{c c c c c}
-{\bf Business} & {\bf Sports} & {\bf Entertainment} & {\bf Politics} & {\bf Tech} \\ \hline
-call & roddick & song & wage & game \\
-centre & nadal & music & minimum & ink \\
- & dallaglio & urban & forsythe & yahoo \\
- & & best & increase & gadget \\
-\end{tabular}
-\end{center}
-
-
-\subsection{Classification}
-In the four classification methods we tested, we found that the classification accuracy did not significantly increase when we added more than four principal components.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=.6\textwidth]{figures/accuracybyrank}
-\caption{Comparison of classification accuracy for each article class as we vary the number of principal components (rank) used.}
-\label{class_accuracy}
-\end{figure}
-
-\begin{table}[H]
-\begin{center}
-\begin{tabular}{c | c | c | c | c | c}
- {\bf Rank } & {\bf 1 } & {\bf 2} & {\bf 3} & {\bf 4} & {\bf 5 } \\ \hline
-Nearest Mean & 59\% & 77\% & 82\% & 96\%  & 96\% \\
-KNN ($K = 5$) & 56\% & 77\% & 86\% & 96\%  & 97\% \\
-Logistic & 45\% & 75\% & 78\% & 94\%  & 94\% \\
-Neural Net & 46\% & 75\% & 79\% & 95\%  & 95\%
-\end{tabular}
-\end{center} 
-
-\begin{center}
-\begin{tabular}{c | c | c | c | c | c}
- {\bf Rank } & {\bf 1 } & {\bf 2} & {\bf 3} & {\bf 4} & {\bf 5 } \\ \hline
-Nearest Mean & 48\% & 78\% & 89\% & 95\%  & 96\% \\
-KNN ($K = 5$) & 52\% & 77\% & 92\% & 96\%  & 96\% \\
-Logistic & 45\% & 74\% & 77\% & 93\%  & 93\% \\
-Neural Net & 45\% & 74\% & 79\% & 93\%  & 93\%
-\end{tabular}
-\end{center}
-\caption{Comparison of classification accuracy for four classification algorithms on our PCA space (top) and robust PCA spaces (bottom).}
-\end{table}
-
-\subsubsection{Misclassification}
-While projecting onto the principal components of the training set does a good job at separating the article by class, it does
-not separate them perfectly. Therefore articles near the decision boundaries may be misclassified.
-
-For example, Figure \ref{misclassification} shows how articles from each class are classified by the $K$-nearest neighbor algorithm as we vary the number of principal components used. It is interesting to note that articles from business and politics are likely to be mistakenly cross-classified. Furthermore, technology articles are prone to misclassification if the fourth principal component, which contains many technology-related words, is ignored.
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=.3]{figures/classificationmatrices}
-\caption{Classification of each article by type. Diagonal elements indicate percent of articles classified correctly; off-diagonal
-elements correspond to misclassified articles.}
-\label{misclassification}
-\end{figure}
 
 % Sec 5. Summary and Conclusions
 \section{Summary and Conclusions}
