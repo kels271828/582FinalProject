@@ -51,31 +51,33 @@ In addition to the traditional PCA formulation, we also employ a variant known a
 }
 Principal component analysis is a powerful tool for isolating low-dimensional
 structure embedded in high-dimensional data. The goal of PCA is to find the best
-linear transformation of the data which maximizes the variance in the first principal component direction and in each subsequent orthogonal directions. To perform PCA, we recall the Singular Value Decomposition, or SVD, 
+linear transformation of the data which maximizes the variance in the first principal component direction and in each subsequent orthogonal directions. To perform PCA, we utilize the singular value decomposition, or SVD, 
 \begin{align} 
 A &= U \Sigma V^*,
 \label{eq:svd}
 \end{align}
-which exists for every matrix $A \in \R^{m \times n}.$ We refer to the number of nonzero singular values of a matrix as the \emph{rank} of a given matrix. We refrain from listing otherwise significant information about the SVD in hopes that the reader holds some level of awareness of the relevant theorems and properties. 
+which exists for every matrix $A \in \R^{m \times n}.$ In this decomposition the columns of $U$ represent the principal components, or the unit vectors of the new basis, while the columns of $V$ dictate how each article is expressed in the new basis. The elements of $\Sigma$, the singular values, represent the amount of ``energy" present each principal component, while the number of nonzero singular values reveal the rank of the matrix $A$. For systems where the singular values decay rapidly to zero, $A$ can be approximated by truncating the singular value decomposition. For example, using only the first $r$ principal components, we have
+\begin{equation}
+A \approx U_r \Sigma_r V_r^*,
+\end{equation}
+where $U \in \R^{m \times r}$, $\Sigma \in \R^{r \times r}$, and $V \in \R^{n \times r}$. Next we can project the matrix $A$ onto this low-rank space spanned by the first $r$ principal components:
+\begin{equation}
+U_r^* A = \Sigma_r V_r^*.
+\end{equation}
 
-We arrange our matrix of data $A \in \R^{ 9635 \times 2225 } $ such that each row represents a different word (or \emph{feature}) and each column represents a different article. We arrange the columns by the classes of articles. In addition, we require this matrix to have rows of mean zero. Since this will not be true of the data initially, we redefine $X$ by subtracting off the mean of each row of $X$, and letting this be the ``new'' data matrix. We then take the SVD of this matrix as in \eqref{eq:svd}.
-
-The matrix $U$ now consists of columns which represent the ordered principle components, $\Sigma$ represents the importance of each singular value with respect to the others, and $V$ represents how each article is projected onto the principle component space. To represent each article $i$ in terms of the determined principle components, we can view each article as $\sigma_i v_i $, where $\sigma_i$ the corresponding singular value from $\Sigma$, and $v_i$ is the $i$-th \emph{row} of $V$. Since we look to reduce the dimensionality of the data, we intend to only examine a small number of principle components; therefore, we look at only the first several components of $v_i$.
+%We arrange our matrix of data $A \in \R^{ 9635 \times 2225 } $ such that each row represents a different word (or \emph{feature}) and each column represents a different article. We arrange the columns by the classes of articles. In addition, we require this matrix to have rows of mean zero. Since this will not be true of the data initially, we redefine $X$ by subtracting off the mean of each row of $X$, and letting this be the ``new'' data matrix. We then take the SVD of this matrix as in \eqref{eq:svd}.
+%
+%The matrix $U$ now consists of columns which represent the ordered principle components, $\Sigma$ represents the importance of each singular value with respect to the others, and $V$ represents how each article is projected onto the principle component space. To represent each article $i$ in terms of the determined principle components, we can view each article as $\sigma_i v_i $, where $\sigma_i$ the corresponding singular value from $\Sigma$, and $v_i$ is the $i$-th \emph{row} of $V$. Since we look to reduce the dimensionality of the data, we intend to only examine a small number of principle components; therefore, we look at only the first several components of $v_i$.
 
 \subsection{Robust PCA}
-Robust Principle Component Analysis is a variant of PCA which presupposes the data has some low dimensionality suitable for PCA, but with an unknown amount of sparse noise within the data. That is, for the data matrix $A$, we assume that 
-$$  A \approx L + S,$$
-where $L$ has low rank and $S$ is sparse. To penalize these assumptions convexly, we consider the formulation
+Robust principle component analysis is a variant of PCA which presupposes that the data has low-rank structure, but with an unknown amount of sparse noise. That is, for the data matrix $A$ we assume that 
+\begin{equation}  A \approx L + S, \end{equation}
+where $L$ has low rank and $S$ is sparse. Finding these two matrices can be formulated as the convex optimization problem
 \begin{align}
 \min_{L,S} \norm{A-L-S}_{F}^2 + \lambda_1 \norm{L}_* + \lambda_2 \norm{S}_1,
 \label{eq:robust_obj}
 \end{align}
-where $\norm{\cdot}_*$ is the nuclear norm, defined by
-\begin{align*}
-\norm{\cdot}_* = \norm{\sigma(\cdot)}_1
-\end{align*}
-where $\sigma$ maps a matrix to a vector of its singular values. Therefore the nuclear norm of a matrix is the sum of its singular values. In addition, $\norm{\cdot}_1$ is the vectorized $\ell_1$ norm, treating $S \in \R^{m \times n}$ as $S \in \R^{mn}.$ The quantity $A - L - S$ is considered an error term, added in for computational stability. The parameters $\lambda_1$ and $\lambda_2$ can be tuned to prioritize low rank in $L$ or sparsity in $S.$ We can now choose one of many available methods for solving convex optimization problems. Our approach is discussed in the Algorithms section of this report. 
-
+where $\norm{\cdot}_*$ is the nuclear norm, defined by $\norm{\cdot}_* = \norm{\sigma(\cdot)}_1$, where $\sigma$ maps a matrix to a vector of its singular values. In other words, the nuclear norm of a matrix is the sum of its singular values. In addition, $\norm{\cdot}_1$ is the vectorized $\ell_1$ norm, treating the matrix $S \in \R^{m \times n}$ as the vector$S \in \R^{mn}.$ The parameters $\lambda_1$ and $\lambda_2$ can be tuned to prioritize low rank in $L$ or sparsity in $S.$ We can now choose one of many available methods for convex optimization problems, which we discuss in the next section. 
 
 \subsection{Classification Methods}
 \comment{Kelsey}
